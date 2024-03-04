@@ -71,6 +71,12 @@ color_picker_button = tk.Button(buttonFrame, text="Change color", command=lambda
 color_picker_button.grid(row=1,column=1, sticky='nesw', padx=1, pady=1);
 reset_color_button = tk.Button(buttonFrame, text="Reset color", command=lambda m="Reset Color" : button_pressed(m))
 reset_color_button.grid(row=1,column=2, sticky='nesw', padx=1, pady=1);
+brightness_up = tk.Button(buttonFrame, text="UP", command=lambda m="up" : button_pressed(m))
+brightness_up.grid(row=2,column=0, sticky='nesw', padx=1, pady=1);
+brightness_label= tk.Label(buttonFrame, text="Brightness: \n 2% ");
+brightness_label.grid(row=2, column=1, sticky='nesw', padx=1, pady=1);
+brightness_down = tk.Button(buttonFrame, text="DOWN", command=lambda m="down" : button_pressed(m))
+brightness_down.grid(row=2,column=2, sticky='nesw', padx=1, pady=1);
 ### END OF BUTTONS ###
 
 
@@ -130,20 +136,20 @@ async def async_turn_off_fan():
     p = SmartPlug("10.0.0.115")
     await p.update()  # Request the update
 
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
-
-    await light1.update()
-    print("light 1 initialized.")
-    await light2.update()  
-    print("light 2 initialized.")
-    await light3.update()
-    print("light 3 initialized.")
-
-    await light1.set_hsv(0, 0, 100);
-    await light2.set_hsv(0, 0, 100);
-    await light3.set_hsv(0, 0, 100);
+##    light1 = SmartBulb("10.0.0.84")
+##    light2 = SmartBulb("10.0.0.9")
+##    light3 = SmartBulb("10.0.0.204")
+##
+##    await light1.update()
+##    print("light 1 initialized.")
+##    await light2.update()  
+##    print("light 2 initialized.")
+##    await light3.update()
+##    print("light 3 initialized.")
+##
+##    await light1.set_hsv(0, 0, 100);
+##    await light2.set_hsv(0, 0, 100);
+##    await light3.set_hsv(0, 0, 100);
 
     await p.turn_off() #Turn the device off
     print("Turned switch OFF.");
@@ -166,6 +172,7 @@ def turn_off_fan():
     #asyncio.run(async_turn_off_fan())
     #B["state"]="enabled"
     label["text"]=asyncio.run(async_turn_off_fan())
+    brightness_label["text"]="Brightness \n Unavailable" 
 
 
 
@@ -233,25 +240,28 @@ def rgb2hsv(r, g, b):
 
 
 def colorPicker():
-    my_color = colorchooser.askcolor();
-    red=my_color[0][0] #first [0] only gives us the first part of my_color which is the rgb string
-                       #second [0] gives us the first value in that rgb truple
-    green=my_color[0][1]
-    blue=my_color[0][2]
-    
-    #my_label = tk.Label(buttonFrame, text=(str(red) + "," + str(green) + "," + str(blue)))
-    #rgb=colorsys.rgb_to_hsv(red*360,green*100,blue*100)
-    #print(rgb)
-    
-    print(hex2rgb(my_color[1]))
-    print(rgb2hsv(red,green,blue))
-    #my_label = tk.Label(buttonFrame, text=my_color)
-    #my_label.grid(row=1, column=2, sticky='nesw', padx=1, pady=1);
-    
-    #print("Color picker button was pressed")
-    
-    label.configure(bg=my_color[1])
-    label["text"]=asyncio.run(async_change_bulb_color(rgb2hsv(red,green,blue)))
+    try:
+        my_color = colorchooser.askcolor();
+        red=my_color[0][0] #first [0] only gives us the first part of my_color which is the rgb string
+                           #second [0] gives us the first value in that rgb truple
+        green=my_color[0][1]
+        blue=my_color[0][2]
+        
+        #my_label = tk.Label(buttonFrame, text=(str(red) + "," + str(green) + "," + str(blue)))
+        #rgb=colorsys.rgb_to_hsv(red*360,green*100,blue*100)
+        #print(rgb)
+        
+        print(hex2rgb(my_color[1]))
+        print(rgb2hsv(red,green,blue))
+        #my_label = tk.Label(buttonFrame, text=my_color)
+        #my_label.grid(row=1, column=2, sticky='nesw', padx=1, pady=1);
+        
+        #print("Color picker button was pressed")
+        
+        label.configure(bg=my_color[1])
+        label["text"]=asyncio.run(async_change_bulb_color(rgb2hsv(red,green,blue)))
+    except Exception:
+        print("No color chosen")
     
     
 async def async_change_bulb_color(hsv_val):
@@ -283,18 +293,107 @@ async def async_reset_bulb_color():
     light3 = SmartBulb("10.0.0.204")
 
     await light1.update()
-    print("light 1 initialized.")
     await light2.update()
-    print("light 2 initialized.")
     await light3.update()
-    print("light 3 initialized.")
     
     await light1.set_hsv(0, 0, 100);
     await light2.set_hsv(0, 0, 100);
     await light3.set_hsv(0, 0, 100);
     
+    await light1.set_brightness(50);
+    await light2.set_brightness(50);
+    await light3.set_brightness(50);
+
+    await light1.update()
+    await light2.update()
+    await light3.update()
+    
     label["text"]="Reset color successful."
-    label.configure(bg="")
+    brightness_label["text"]="Brightness \n" + str(light1.brightness) + "%"
+    print("Brightness is: " + str(light1.brightness))
+    #label.configure(bg="")
+
+
+def brightness_up():
+    brightness_label["text"]=asyncio.run(async_brightness_up())
+
+
+async def async_brightness_up():
+    light1 = SmartBulb("10.0.0.84")
+    light2 = SmartBulb("10.0.0.9")
+    light3 = SmartBulb("10.0.0.204")
+    await light1.update()
+    brightness = light1.brightness
+    if (brightness < 100):
+        try:
+            await light1.update()
+            await light1.set_brightness(brightness + 10);
+            await light1.update()
+            print("light 1 initialized.")
+            await light2.update()
+            await light2.set_brightness(brightness + 10);
+            await light2.update()
+            print("light 2 initialized.")
+            await light3.update()
+            await light3.set_brightness(brightness + 10);
+            await light3.update()
+            print("light 3 initialized.")
+            print("Brightness is: " + str(light1.brightness))
+        except ValueError:
+            await light1.update()
+            await light1.set_brightness(100);
+            await light1.update()
+            await light2.update()
+            await light2.set_brightness(100);
+            await light2.update()
+            await light3.update()
+            await light3.set_brightness(100);
+            await light3.update()
+            print("Error Caught: Value was above 100")
+    
+    return "Brightness \n" + str(light1.brightness) + "%"
+    
+
+def brightness_down():
+    brightness_label["text"]=asyncio.run(async_brightness_down())
+
+async def async_brightness_down():
+    light1 = SmartBulb("10.0.0.84")
+    light2 = SmartBulb("10.0.0.9")
+    light3 = SmartBulb("10.0.0.204")
+    
+    await light1.update()
+    brightness = light1.brightness
+    if (brightness >= 0):
+        try:
+            await light1.update()
+            await light1.set_brightness(brightness - 10);
+            await light1.update()
+            print("light 1 initialized.")
+            await light2.update()
+            await light2.set_brightness(brightness - 10);
+            await light2.update()
+            print("light 2 initialized.")
+            await light3.update()
+            await light3.set_brightness(brightness - 10);
+            await light3.update()
+            print("light 3 initialized.")
+            print("Brightness is: " + str(light1.brightness))
+        except ValueError:
+            await light1.update()
+            await light1.set_brightness(0);
+            await light1.update()
+            await light2.update()
+            await light2.set_brightness(0);
+            await light2.update()
+            await light3.update()
+            await light3.set_brightness(0);
+            await light3.update()
+            print("Error Caught: Value dropped below 0")
+    
+    return "Brightness \n" + str(light1.brightness) + "%"
+    
+
 
 
 
@@ -313,10 +412,27 @@ def button_pressed(m):
         colorPicker()
     elif (m == "Reset Color"):
         asyncio.run(async_reset_bulb_color())
+    elif (m == "up"):
+        brightness_up()
+    elif (m == "down"):
+        brightness_down()
     else:
         print("Button message not defined AK")
 
 
+
+async def init_method():
+    p = SmartPlug("10.0.0.115")
+    await p.update()  # Request the update
+    if(p.is_on):
+        light1 = SmartBulb("10.0.0.84")
+        await light1.update()
+        statusLabel["image"]=activeImg
+        print("Brightness is: " + str(light1.brightness))
+        return str(light1.brightness) + "%"
+    else:
+        statusLabel["image"]=inactiveImg
+        return ("Unavailable")
     
 ### END OF METHODS ###
 
@@ -326,10 +442,11 @@ def button_pressed(m):
 
 
 ### INIT ###
-
+brightness_label["text"]="Brightness \n " + asyncio.run(init_method())
 textFrame.pack(fill=tk.BOTH);
 buttonFrame.pack(fill=tk.BOTH);
 statusFrame.pack(fill=tk.BOTH);
+window.resizable(0, 0)
 window.mainloop();
 
 ### END OF INIT ###
