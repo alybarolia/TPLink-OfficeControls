@@ -7,6 +7,11 @@ from tkinter import colorchooser
 import colorsys
 ##test
 ### INIT ###
+light1_ip = "10.0.0.204"
+light2_ip = "10.0.0.84"
+light3_ip = "10.0.0.9"
+switch_ip = "10.0.0.115"
+
 window = tk.Tk();
 window.title("AK Office");
 
@@ -27,6 +32,8 @@ statusFrame = tk.Frame(
     relief=tk.RAISED,
     borderwidth=1
     );
+
+
 
 ico = Image.open('resources/images/settings_icon.ico')
 photo = ImageTk.PhotoImage(ico)
@@ -85,12 +92,12 @@ brightness_down.grid(row=2,column=2, sticky='nesw', padx=1, pady=1);
 
 ### METHODS ###
 async def async_turn_on_lights():
-    p = SmartPlug("10.0.0.115")
+    p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     await p.turn_on() # Turn the device on
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
 
     await light1.update()
     print("light 1 initialized.")
@@ -110,12 +117,12 @@ async def async_turn_on_lights():
 
 async def async_turn_off_lights():
 
-    p = SmartPlug("10.0.0.115")
+    p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     await p.turn_on() # Turn the device on
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
 
     await light1.update()
     print("light 1 initialized.")
@@ -133,7 +140,7 @@ async def async_turn_off_lights():
     
 
 async def async_turn_off_fan():
-    p = SmartPlug("10.0.0.115")
+    p = SmartPlug(switch_ip)
     await p.update()  # Request the update
 
 ##    light1 = SmartBulb("10.0.0.84")
@@ -159,7 +166,7 @@ async def async_turn_off_fan():
 
 
 async def async_turn_on_fan():
-    p = SmartPlug("10.0.0.115")
+    p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     await p.turn_on() #Turn the device off
     print("Turned switch ON.")
@@ -265,9 +272,9 @@ def colorPicker():
     
     
 async def async_change_bulb_color(hsv_val):
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
 
     await light1.update()
     print("light 1 initialized.")
@@ -288,9 +295,9 @@ async def async_change_bulb_color(hsv_val):
 
 
 async def async_reset_bulb_color():
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
 
     await light1.update()
     await light2.update()
@@ -319,9 +326,9 @@ def brightness_up():
 
 
 async def async_brightness_up():
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
     await light1.update()
     brightness = light1.brightness
     if (brightness < 100):
@@ -358,9 +365,9 @@ def brightness_down():
     brightness_label["text"]=asyncio.run(async_brightness_down())
 
 async def async_brightness_down():
-    light1 = SmartBulb("10.0.0.84")
-    light2 = SmartBulb("10.0.0.9")
-    light3 = SmartBulb("10.0.0.204")
+    light1 = SmartBulb(light1_ip)
+    light2 = SmartBulb(light2_ip)
+    light3 = SmartBulb(light3_ip)
     
     await light1.update()
     brightness = light1.brightness
@@ -422,10 +429,10 @@ def button_pressed(m):
 
 
 async def init_method():
-    p = SmartPlug("10.0.0.115")
+    p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     if(p.is_on):
-        light1 = SmartBulb("10.0.0.84")
+        light1 = SmartBulb(light1_ip)
         await light1.update()
         statusLabel["image"]=activeImg
         print("Brightness is: " + str(light1.brightness))
