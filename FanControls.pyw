@@ -545,6 +545,7 @@ def button_pressed(m):
             allow_sta()
             asyncio.run(bluetooth_test.connect())
             bt_img_label["image"]=btConnectedImg
+            label["text"] = "Connected!"
         except ImportError:
             # other OSes and older versions of Bleak will raise ImportError which we
             # can safely ignore
@@ -554,6 +555,7 @@ def button_pressed(m):
             from bleak.backends.winrt.util import allow_sta
             allow_sta()
             asyncio.run(bluetooth_test.turn_on())
+            label["text"] = "Lights turned on"
         except ImportError:
             pass
     elif (m == "bt_off"):
@@ -561,9 +563,12 @@ def button_pressed(m):
             from bleak.backends.winrt.util import allow_sta
             allow_sta()
             asyncio.run(bluetooth_test.turn_off())
+            label["text"] = "Lights turned off"
         except ImportError:
             pass
+        
     elif (m == "bt_disconnect"):
+        label["text"] = "Disconnect not implemented"
         print("disconnecting...")
     else:
         print("Button message not defined AK")
@@ -588,7 +593,6 @@ async def init_method():
         return ("Unavailable")
     
 ### END OF METHODS ###
-
 
 
 
