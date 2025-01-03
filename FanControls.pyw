@@ -5,21 +5,94 @@ import asyncio
 from kasa import SmartPlug, SmartBulb
 from tkinter import colorchooser
 import colorsys
-##test
+from bleak import BleakClient, BleakScanner
+from threading import Thread
+import bluetooth_test
+#import config as cfg
+import json
+
+
 ### INIT ###
-light1_ip = "10.0.0.204"
-light2_ip = "10.0.0.84"
-light3_ip = "10.0.0.9"
-switch_ip = "10.0.0.115"
+with open("config.json") as jsonfile:
+    data = json.load(jsonfile) # Reading the file
+    print("Read successful from FanControls")
+    #print(data['light1'])
+
+
+light1_ip = data["light1"]
+light2_ip = data["light2"]
+light3_ip = data["light3"]
+switch_ip = data["switch"]
+bt_address = ''
 
 window = tk.Tk();
 window.title("AK Office");
 
-buttonFrame = tk.Frame(
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Menu bar configuration
+
+
+# Creating Menubar
+menubar = Menu(window)
+
+# Adding File Menu and commands
+config = Menu(menubar, tearoff = 0)
+menubar.add_cascade(label ='Configuration', menu = config)
+config.add_command(label ='Open File', command = None)
+#file.add_command(label ='Open...', command = None)
+#file.add_command(label ='Save', command = None)
+config.add_separator()
+config.add_command(label ='Exit', command = window.destroy)
+
+'''
+# Adding Edit Menu and commands
+edit = Menu(menubar, tearoff = 0)
+menubar.add_cascade(label ='Edit', menu = edit)
+edit.add_command(label ='Cut', command = None)
+edit.add_command(label ='Copy', command = None)
+edit.add_command(label ='Paste', command = None)
+edit.add_command(label ='Select All', command = None)
+edit.add_separator()
+edit.add_command(label ='Find...', command = None)
+edit.add_command(label ='Find again', command = None)
+
+# Adding Help Menu
+help_ = Menu(menubar, tearoff = 0)
+menubar.add_cascade(label ='Help', menu = help_)
+help_.add_command(label ='Tk Help', command = None)
+help_.add_command(label ='Demo', command = None)
+help_.add_separator()
+help_.add_command(label ='About Tk', command = None)
+'''
+
+window.config(menu = menubar)
+
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+fanButtonFrame = tk.Frame(
     master=window,
-    relief=tk.RAISED,
-    borderwidth=1
+    #relief=tk.SUNKEN,
+    borderwidth=1,
+    bd=5
     );
+
+btButtonFrame = tk.Frame(
+    master=window,
+    #relief=tk.RAISED,
+    borderwidth=1,
+    bd=5
+    );
+
 
 textFrame = tk.Frame(
     master=window,
@@ -27,11 +100,24 @@ textFrame = tk.Frame(
     borderwidth=1
     );
 
-statusFrame = tk.Frame(
+fanLabelFrame = tk.Frame(
     master=window,
     relief=tk.RAISED,
     borderwidth=1
     );
+
+btLabelFrame = tk.Frame(
+    master=window,
+    relief=tk.RAISED,
+    borderwidth=1
+    );
+
+statusFrame = tk.Frame(
+    master=window,
+    #relief=tk.RAISED,
+    borderwidth=1
+    );
+
 
 
 
@@ -41,6 +127,8 @@ window.wm_iconphoto(False, photo)
 
 label = tk.Label(textFrame, text="", font="Times 12 bold");
 label.pack(fill = tk.BOTH);
+
+
 
 ### Resizing the Image
 activeImg = Image.open("resources/images/green-checkmark-icon.png"); # Open Image
@@ -54,10 +142,25 @@ inactiveImg = ImageTk.PhotoImage(inactiveResized)
 warningImg = Image.open("resources/images/warning.png"); 
 warningResized = warningImg.resize((20, 20), Image.LANCZOS);
 warningImg = ImageTk.PhotoImage(warningResized)
+
+btDisconnectedImg = Image.open("resources/images/bt-disconnected1.png"); 
+btDisconnectedImgResized = btDisconnectedImg.resize((70, 70), Image.LANCZOS);
+btDisconnectedImg = ImageTk.PhotoImage(btDisconnectedImgResized)
+
+btConnectedImg = Image.open("resources/images/bt-connected.png"); 
+btConnectedImgResized = btConnectedImg.resize((70, 70), Image.LANCZOS);
+btConnectedImg = ImageTk.PhotoImage(btConnectedImgResized)
 ### END OF Resizing the Image
 
 statusLabel = tk.Label(statusFrame, text="Status: ", font="Times 11 bold", image=activeImg, compound="right");
 statusLabel.pack();
+
+
+fanLabel = tk.Label(fanLabelFrame, text="Fan Controls", font="Times 12 bold");
+fanLabel.pack(fill = tk.BOTH);
+
+btLabel = tk.Label(btLabelFrame, text="BT Controls", font="Times 12 bold");
+btLabel.pack(fill = tk.BOTH);
 ### END OF INIT ###
 
 
@@ -66,24 +169,38 @@ statusLabel.pack();
 
 
 ### BUTTONS ###
-fan_on_button = tk.Button(buttonFrame, text ="Turn ON fan",command=lambda m="Turn ON fan" : button_pressed(m));
+fan_on_button = tk.Button(fanButtonFrame, text ="Fan ON", width=15, height=2,command=lambda m="Turn ON fan" : button_pressed(m));
 fan_on_button.grid(row=0, column=0, sticky='nesw', padx=1, pady=1);
-fan_off_button = tk.Button(buttonFrame, text ="Turn OFF fan",command=lambda m="Turn OFF fan": button_pressed(m));
+fan_off_button = tk.Button(fanButtonFrame, text ="Fan OFF",width=15, height=2,command=lambda m="Turn OFF fan": button_pressed(m));
 fan_off_button.grid(row=0, column=1, sticky='nesw', padx=1, pady=1);
-fan_on_lights_off_button = tk.Button(buttonFrame, text ="Fan ON \nLights OFF",command=lambda m="Fan ON Lights OFF": button_pressed(m));
+fan_on_lights_off_button = tk.Button(fanButtonFrame, text ="Lights OFF",width=15, height=2, command=lambda m="Fan ON Lights OFF": button_pressed(m));
 fan_on_lights_off_button.grid(row=0, column=2, sticky='nesw', padx=1, pady=1);
-fan_on_lights_on_button = tk.Button(buttonFrame, text ="Fan ON \nLights ON",command=lambda m="Fan ON Lights ON" : button_pressed(m));
+fan_on_lights_on_button = tk.Button(fanButtonFrame, text ="Lights ON", width=15, height=2,command=lambda m="Fan ON Lights ON" : button_pressed(m));
 fan_on_lights_on_button.grid(row=1, column=0, sticky='nesw', padx=1, pady=1);
-color_picker_button = tk.Button(buttonFrame, text="Change color", command=lambda m="Change Color" : button_pressed(m))
+color_picker_button = tk.Button(fanButtonFrame, text="Change color", width=15, height=2, command=lambda m="Change Color" : button_pressed(m))
 color_picker_button.grid(row=1,column=1, sticky='nesw', padx=1, pady=1);
-reset_color_button = tk.Button(buttonFrame, text="Reset color", command=lambda m="Reset Color" : button_pressed(m))
+reset_color_button = tk.Button(fanButtonFrame, text="Reset color", width=15, height=2, command=lambda m="Reset Color" : button_pressed(m))
 reset_color_button.grid(row=1,column=2, sticky='nesw', padx=1, pady=1);
-brightness_up = tk.Button(buttonFrame, text="UP", command=lambda m="up" : button_pressed(m))
+brightness_up = tk.Button(fanButtonFrame, text="Up", width=15, height=2, command=lambda m="up" : button_pressed(m))
 brightness_up.grid(row=2,column=0, sticky='nesw', padx=1, pady=1);
-brightness_label= tk.Label(buttonFrame, text="Brightness: \n 2% ");
+brightness_label= tk.Label(fanButtonFrame, text="Brightness: \n 2% ");
 brightness_label.grid(row=2, column=1, sticky='nesw', padx=1, pady=1);
-brightness_down = tk.Button(buttonFrame, text="DOWN", command=lambda m="down" : button_pressed(m))
+brightness_down = tk.Button(fanButtonFrame, text="Down", width=15, height=2, command=lambda m="down" : button_pressed(m))
 brightness_down.grid(row=2,column=2, sticky='nesw', padx=1, pady=1);
+
+bt_connect = tk.Button(btButtonFrame, text="Connect", width=15, height=2, command=lambda m="bt_connect" : button_pressed(m))
+bt_connect.grid(row=0,column=0, sticky='nesw', padx=1, pady=1);
+bt_label= tk.Label(btButtonFrame, text="Not Connected", width=15, height=2);
+bt_label.grid(row=0, column=1, rowspan=2, sticky='nesw', padx=1, pady=1);
+bt_on = tk.Button(btButtonFrame, text="On", width=15, height=2, command=lambda m="bt_on" : button_pressed(m))
+bt_on.grid(row=1,column=0, sticky='nesw', padx=1, pady=1);
+bt_off = tk.Button(btButtonFrame, text="Off", width=15, height=2, command=lambda m="bt_off" : button_pressed(m))
+bt_off.grid(row=1,column=2, sticky='nesw', padx=1, pady=1);
+bt_img_label= tk.Label(btButtonFrame, text="Not Connected", width=15, height=2);
+bt_img_label.grid(row=0, column=1, rowspan=2, sticky='nesw', padx=1, pady=1);
+bt_disconnect = tk.Button(btButtonFrame, text="Disconnect", width=15, height=2, command=lambda m="bt_disconnect" : button_pressed(m))
+bt_disconnect.grid(row=0,column=2, sticky='nesw', padx=1, pady=1);
+
 ### END OF BUTTONS ###
 
 
@@ -142,21 +259,6 @@ async def async_turn_off_lights():
 async def async_turn_off_fan():
     p = SmartPlug(switch_ip)
     await p.update()  # Request the update
-
-##    light1 = SmartBulb("10.0.0.84")
-##    light2 = SmartBulb("10.0.0.9")
-##    light3 = SmartBulb("10.0.0.204")
-##
-##    await light1.update()
-##    print("light 1 initialized.")
-##    await light2.update()  
-##    print("light 2 initialized.")
-##    await light3.update()
-##    print("light 3 initialized.")
-##
-##    await light1.set_hsv(0, 0, 100);
-##    await light2.set_hsv(0, 0, 100);
-##    await light3.set_hsv(0, 0, 100);
 
     await p.turn_off() #Turn the device off
     print("Turned switch OFF.");
@@ -254,13 +356,13 @@ def colorPicker():
         green=my_color[0][1]
         blue=my_color[0][2]
         
-        #my_label = tk.Label(buttonFrame, text=(str(red) + "," + str(green) + "," + str(blue)))
+        #my_label = tk.Label(fanButtonFrame, text=(str(red) + "," + str(green) + "," + str(blue)))
         #rgb=colorsys.rgb_to_hsv(red*360,green*100,blue*100)
         #print(rgb)
         
         print(hex2rgb(my_color[1]))
         print(rgb2hsv(red,green,blue))
-        #my_label = tk.Label(buttonFrame, text=my_color)
+        #my_label = tk.Label(fanButtonFrame, text=my_color)
         #my_label.grid(row=1, column=2, sticky='nesw', padx=1, pady=1);
         
         #print("Color picker button was pressed")
@@ -401,8 +503,20 @@ async def async_brightness_down():
     return "Brightness \n" + str(light1.brightness) + "%"
     
 
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                ## BT Controls
 
 
+        #refer to bluetooth_test.py
+
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+                ## Main Control
 
 def button_pressed(m):
 
@@ -423,12 +537,41 @@ def button_pressed(m):
         brightness_up()
     elif (m == "down"):
         brightness_down()
+    elif (m == "bt_connect"):
+        try:
+            from bleak.backends.winrt.util import allow_sta
+            # tell Bleak we are using a graphical user interface that has been properly
+            # configured to work with asyncio
+            allow_sta()
+            asyncio.run(bluetooth_test.connect())
+            bt_img_label["image"]=btConnectedImg
+        except ImportError:
+            # other OSes and older versions of Bleak will raise ImportError which we
+            # can safely ignore
+            pass
+    elif (m == "bt_on"):
+        try:
+            from bleak.backends.winrt.util import allow_sta
+            allow_sta()
+            asyncio.run(bluetooth_test.turn_on())
+        except ImportError:
+            pass
+    elif (m == "bt_off"):
+        try:
+            from bleak.backends.winrt.util import allow_sta
+            allow_sta()
+            asyncio.run(bluetooth_test.turn_off())
+        except ImportError:
+            pass
+    elif (m == "bt_disconnect"):
+        print("disconnecting...")
     else:
         print("Button message not defined AK")
 
 
 
 async def init_method():
+    bt_img_label["image"]=btDisconnectedImg
     p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     if(p.is_on):
@@ -451,8 +594,13 @@ async def init_method():
 ### INIT ###
 brightness_label["text"]="Brightness \n " + asyncio.run(init_method())
 textFrame.pack(fill=tk.BOTH);
-buttonFrame.pack(fill=tk.BOTH);
+fanLabelFrame.pack(fill=tk.BOTH);
+fanButtonFrame.pack(fill=tk.BOTH);
 statusFrame.pack(fill=tk.BOTH);
+btLabelFrame.pack(fill=tk.BOTH);
+btButtonFrame.pack(fill=tk.BOTH);
+
+
 window.resizable(0, 0)
 window.mainloop();
 
