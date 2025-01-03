@@ -41,7 +41,7 @@ menubar = Menu(window)
 # Adding File Menu and commands
 config = Menu(menubar, tearoff = 0)
 menubar.add_cascade(label ='Configuration', menu = config)
-config.add_command(label ='Open config', command = open('config.json','r'))
+config.add_command(label ='Edit Config', command = lambda: os.startfile('config.json'))
 #file.add_command(label ='Open...', command = None)
 #file.add_command(label ='Save', command = None)
 config.add_separator()
