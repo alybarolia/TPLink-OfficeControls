@@ -8,7 +8,7 @@ import colorsys
 from bleak import BleakClient, BleakScanner
 from threading import Thread
 import bluetooth_test
-#import config as cfg
+import os
 import json
 
 
@@ -41,7 +41,7 @@ menubar = Menu(window)
 # Adding File Menu and commands
 config = Menu(menubar, tearoff = 0)
 menubar.add_cascade(label ='Configuration', menu = config)
-config.add_command(label ='Open File', command = None)
+config.add_command(label ='Open config', command = open('config.json','r'))
 #file.add_command(label ='Open...', command = None)
 #file.add_command(label ='Save', command = None)
 config.add_separator()
@@ -571,7 +571,10 @@ def button_pressed(m):
 
 
 async def init_method():
-    bt_img_label["image"]=btDisconnectedImg
+    if (data["ble_address"]!=""):
+        bt_img_label["image"]=btConnectedImg
+    else:
+        bt_img_label["image"]=btDisconnectedImg
     p = SmartPlug(switch_ip)
     await p.update()  # Request the update
     if(p.is_on):
@@ -585,8 +588,6 @@ async def init_method():
         return ("Unavailable")
     
 ### END OF METHODS ###
-
-
 
 
 
