@@ -1,4 +1,3 @@
-
 import asyncio
 from bleak import BleakClient, BleakScanner
 #import config as cfg

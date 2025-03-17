@@ -539,10 +539,10 @@ def button_pressed(m):
         brightness_down()
     elif (m == "bt_connect"):
         try:
-            from bleak.backends.winrt.util import allow_sta
+            from bleak.backends.winrt.util import uninitialize_sta
             # tell Bleak we are using a graphical user interface that has been properly
             # configured to work with asyncio
-            allow_sta()
+            uninitialize_sta()
             asyncio.run(bluetooth_test.connect())
             bt_img_label["image"]=btConnectedImg
             label["text"] = "Connected!"
@@ -552,27 +552,32 @@ def button_pressed(m):
             pass
     elif (m == "bt_on"):
         try:
-            from bleak.backends.winrt.util import allow_sta
-            allow_sta()
+            from bleak.backends.winrt.util import uninitialize_sta
+            #from bleak.backends.winrt.util import allow_sta
+            uninitialize_sta()
+            #allow_sta()
             asyncio.run(bluetooth_test.turn_on())
             label["text"] = "Lights turned on"
-        except ImportError:
+        except ImportError as e:
+            print("Error: " + e)
             pass
+
     elif (m == "bt_off"):
         try:
-            from bleak.backends.winrt.util import allow_sta
-            allow_sta()
+            from bleak.backends.winrt.util import uninitialize_sta
+            uninitialize_sta()
             asyncio.run(bluetooth_test.turn_off())
             label["text"] = "Lights turned off"
         except ImportError:
             pass
-        
+        finally:
+            print("Error taken")
     elif (m == "bt_disconnect"):
         label["text"] = "Disconnect not implemented"
         print("disconnecting...")
+
     else:
         print("Button message not defined AK")
-
 
 
 async def init_method():
@@ -608,5 +613,7 @@ btButtonFrame.pack(fill=tk.BOTH);
 
 window.resizable(0, 0)
 window.mainloop();
+loop=asyncio.get_event_loop()
+print(type(loop))
 
 ### END OF INIT ###
