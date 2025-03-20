@@ -8,6 +8,10 @@ def install(package):
 
 # Example
 if __name__ == '__main__':
-    install('pillow')
-    install('python-kasa')
-    install('bleak')
+    answer = input("Did you mean to execute this program? y for Yes, n for No\n")
+    if answer == "y":
+        install('pillow')
+        install('python-kasa')
+        install('bleak')
+    else:
+        exit()
