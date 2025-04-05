@@ -198,7 +198,7 @@ bt_off = tk.Button(btButtonFrame, text="Off", width=15, height=2, command=lambda
 bt_off.grid(row=1,column=2, sticky='nesw', padx=1, pady=1);
 bt_img_label= tk.Label(btButtonFrame, text="Not Connected", width=15, height=2);
 bt_img_label.grid(row=0, column=1, rowspan=2, sticky='nesw', padx=1, pady=1);
-bt_disconnect = tk.Button(btButtonFrame, text="Disconnect", width=15, height=2, command=lambda m="bt_disconnect" : button_pressed(m))
+bt_disconnect = tk.Button(btButtonFrame, text="Change Color", width=15, height=2, command=lambda m="bt_colorPicker" : button_pressed(m))
 bt_disconnect.grid(row=0,column=2, sticky='nesw', padx=1, pady=1);
 
 ### END OF BUTTONS ###
@@ -572,10 +572,24 @@ def button_pressed(m):
             pass
         finally:
             print("Error taken")
-    elif (m == "bt_disconnect"):
-        label["text"] = "Disconnect not implemented"
-        print("disconnecting...")
-
+  #  elif (m == "bt_disconnect"):
+  #      label["text"] = "Disconnect not implemented"
+  #      print("disconnecting...")
+    elif (m == "bt_colorPicker"):
+        try:
+            from bleak.backends.winrt.util import uninitialize_sta
+            # tell Bleak we are using a graphical user interface that has been properly
+            # configured to work with asyncio
+            uninitialize_sta()
+            asyncio.run(bluetooth_test.bt_colorPicker())
+            #bt_img_label["image"]=btConnectedImg
+            label["text"] = "Changed color!"
+        except ImportError:
+            # other OSes and older versions of Bleak will raise ImportError which we
+            # can safely ignore
+            pass
+        print("changed color")
+        
     else:
         print("Button message not defined AK")
 
@@ -613,7 +627,7 @@ btButtonFrame.pack(fill=tk.BOTH);
 
 window.resizable(0, 0)
 window.mainloop();
-loop=asyncio.get_event_loop()
-print(type(loop))
+#loop=asyncio.get_event_loop()
+#print(type(loop))
 
 ### END OF INIT ###

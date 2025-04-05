@@ -2,7 +2,7 @@ import asyncio
 from bleak import BleakClient, BleakScanner
 #import config as cfg
 import json
-
+from tkinter import colorchooser
 
 with open("config.json") as jsonfile:
     data = json.load(jsonfile) # Reading the file
@@ -111,6 +111,37 @@ async def turn_off():
     print("LED lights turned off")
 
 
+async def bt_colorPicker():
+    try:
+        my_color = colorchooser.askcolor();
+        red=my_color[0][0] #first [0] only gives us the first part of my_color which is the rgb string
+                           #second [0] gives us the first value in that rgb truple
+        green=my_color[0][1]
+        blue=my_color[0][2]
+        
+        #my_label = tk.Label(fanButtonFrame, text=(str(red) + "," + str(green) + "," + str(blue)))
+        #rgb=colorsys.rgb_to_hsv(red*360,green*100,blue*100)
+        #print(rgb)
+        
+        #print(hex2rgb(my_color[1]))
+        #print(rgb2hsv(red,green,blue))
+        print(red)
+        print(green)
+        print(blue)
+        
+        #print("Color picker button was pressed")
+
+        async with BleakClient(data["ble_address"]) as client:
+            print("Connected to BLE device")
+            if (client.is_connected):
+                lista = [86, red, green, blue, (int(10 * 255 / 100) & 0xFF), 256-16, 256-86]
+                values = bytearray(lista)
+
+            await client.write_gatt_char(characteristic_uuid, values, False)
+        print("LED lights changed color")
+
+    finally:
+        print("done method")
 
 
 
